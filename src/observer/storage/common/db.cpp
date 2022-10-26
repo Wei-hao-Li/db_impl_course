@@ -78,15 +78,21 @@ RC Db::create_table(const char *table_name, int attribute_count, const AttrInfo 
 
 RC Db::drop_table(const char* table_name)
 {
-  //TODO 从表list(opened_tables_)中找出表指针
+  //find Table
+  auto iter = opened_tables_.find(table_name);
+  if(iter == opened_tables_.end()) {
+    return RC::SCHEMA_TABLE_NOT_EXIST;
+  }
+  //destroy Resource
+  RC rc = (iter->second)->destroy(path_.c_str());
+  if(rc != RC::SUCCESS) {
+    LOG_ERROR("Failed to drop table %s.", table_name);
+    return rc;
+  }
 
-  //TODO 找不到表，要返回错误
-
-  //TODO 调用 table->destroy 函数，让表自己销毁资源
-
-  //TODO 删除成功的话，从表list中将它删除
-
-  return RC::GENERIC_ERROR;
+  opened_tables_.erase(iter);
+  LOG_INFO("Drop table success. table name=%s", table_name);
+  return RC::SUCCESS;
 }
 
 Table *Db::find_table(const char *table_name) const

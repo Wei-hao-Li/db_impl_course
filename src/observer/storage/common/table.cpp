@@ -126,13 +126,29 @@ RC Table::destroy(const char* dir) {
   RC rc = sync();
   if(rc != RC::SUCCESS) return rc;
 
-  //TODO 删除描述表元数据的文件
+	std::string path = table_meta_file(dir, name());
+	if (unlink(path.c_str()) != 0) {
+		LOG_ERROR("Failed to delete meta file. file name=%s", path.c_str());
+		return RC::GENERIC_ERROR;
+	}
 
-  //TODO 删除表数据文件
+	std::string data_file = table_data_file(dir, name());
+	if (unlink(data_file.c_str()) != 0) {
+		LOG_ERROR("Failed to delete data file. file name=%s", data_file.c_str());
+		return RC::GENERIC_ERROR;
+	}
 
-  //TODO 清理所有的索引相关文件数据与索引元数据
-
-  return RC::GENERIC_ERROR;
+	const int index_num = table_meta_.index_num();
+	for (int i = 0; i < index_num; i++) {
+		((BplusTreeIndex *) indexes_[i])->close();
+		const IndexMeta *index_meta = table_meta_.index(i);
+		std::string index_file = table_index_file(dir, name(), index_meta->name());
+		if (unlink(index_file.c_str()) != 0) {
+			LOG_ERROR("Failed to delete index file. file name=%s", index_file.c_str());
+			return RC::GENERIC_ERROR;
+		}
+	}
+	return RC::SUCCESS;
 }
 
 
