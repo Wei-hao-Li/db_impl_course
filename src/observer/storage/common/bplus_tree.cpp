@@ -35,7 +35,7 @@ int attribute_comp(const char *first, const char *second, AttrType attr_type, in
   float f1, f2;
   const char *s1, *s2;
   switch (attr_type) {
-    //TODO 模仿其他类型在相关方法中增加DATES类型
+		case DATES:
     case INTS:{
       i1 = *(int *)first;
       i2 = *(int *)second;

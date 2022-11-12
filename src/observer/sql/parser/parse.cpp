@@ -22,6 +22,9 @@ RC parse(char *st, Query *sqln);
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
+
+static const int month_days[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
 void relation_attr_init(RelAttr *relation_attr, const char *relation_name, const char *attribute_name)
 {
   if (relation_name != nullptr) {
@@ -60,25 +63,26 @@ void value_init_string(Value *value, const char *v)
 
 bool check_date(int y, int m, int d)
 {
-  // TODO 根据 y:year,m:month,d:day 校验日期是否合法
-  // TODO 合法 return 0
-  // TODO 不合法 return 1
-  return 1;
+	bool is_leap = (y%400==0 || (y%100 && y%4==0));
+	return (y > 0)
+		&& (m > 0) && (m <= 12)
+		&& (d > 0) && (d <= (month_days[m] + ((m==2 && is_leap) ? 1 : 0)));
 }
 
 int value_init_date(Value *value, const char *v) {
-  // TODO 将 value 的 type 属性修改为日期属性:DATES
-
-  // 从lex的解析中读取 year,month,day
+	value->type = DATES;
+	// 从lex的解析中读取 year,month,day
   int y,m,d;
   sscanf(v, "%d-%d-%d", &y, &m, &d);//not check return value eq 3, lex guarantee
   // 对读取的日期做合法性校验
   bool b = check_date(y,m,d);
   if(!b) return -1;
-  // TODO 将日期转换成整数
-
-  // TODO 将value 的 data 属性修改为转换后的日期
-
+	int converted_date = y*10000 + m*100 + d;
+	if(converted_date < 19700101 || converted_date >= 20380301) {
+		return -1;
+	}
+	value->data = malloc(sizeof(int));
+	memcpy(value->data, &converted_date, sizeof(int));
   return 0;
 }
 

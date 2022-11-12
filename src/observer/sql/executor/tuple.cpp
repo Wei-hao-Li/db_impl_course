@@ -256,11 +256,11 @@ void TupleRecordConverter::add_record(const char *record)
         tuple.add(s, strlen(s));
       } break;
       case DATES: {
-        // TODO 从record中读取存储的日期
+				int value = *(int *)(record + field_meta->offset());
 
-        // TODO 将日期转换为满足输出格式的字符串，注意这里月份和天数，不足两位时需要填充0
-
-        // TODO 将字符串添加到tuple中
+				char out[16] = {0};
+				snprintf(out, sizeof(out),"%04d-%02d-%02d", value/10000, (value%10000)/100,value%100);
+				tuple.add(out, strlen(out));
 
       }break;
       default: {
